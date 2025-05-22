@@ -81,9 +81,14 @@ render() {
     const dx = this.npc.x - this.player.x;
     const dy = this.npc.y - this.player.y;
     const npcDistance = Math.sqrt(dx * dx + dy * dy);
-    const angleToNPC = Math.atan2(dy, dx) - this.player.angle;
+    
+    // Calcular el ángulo hacia el NPC y normalizarlo
+    let angleToNPC = Math.atan2(dy, dx) - this.player.angle;
+    angleToNPC = ((angleToNPC + Math.PI) % (2 * Math.PI)) - Math.PI; // Normalizar entre -PI y PI
     
     const halfFOV = this.player.fov / 2;
+    
+    // Verificar si el NPC está dentro del campo de visión
     if (angleToNPC >= -halfFOV && angleToNPC <= halfFOV) {
         const screenX = (this.canvas.width / 2) * (1 + Math.tan(angleToNPC) / Math.tan(halfFOV));
         const npcHeight = Math.min(this.canvas.height, this.canvas.height / npcDistance);
