@@ -1,101 +1,160 @@
 // js/graphics/renderer3d.js
 
 export default class Renderer3D {
-    constructor(canvas, map, player) {
+    constructor(canvas, map, player, npc) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.map = map;     // Reference to the map object
-        this.player = player; // Reference to the player object
-
-        // Adjust canvas size
+        this.map = map;     // Referencia al mapa
+        this.player = player; // Referencia al jugador
+        this.npc = npc; // Referencia al NPC
+        // Ajustar tamaño del canvas
         this.canvas.width = window.innerWidth * 0.7;
-        this.canvas.height = window.innerHeight; // Assume full height for 3D view
+        this.canvas.height = window.innerHeight;
     }
 
-    render() {
-        // Clear the canvas (or draw background)
-        this.ctx.fillStyle = "#111"; // Original background
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+render() {
+    // Limpiar el canvas
+    this.ctx.fillStyle = "#111";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Draw ceiling
-        const ceilingGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height / 2);
-        ceilingGradient.addColorStop(0, "#222244"); // Dark blue
-        ceilingGradient.addColorStop(1, "#111122");
-        this.ctx.fillStyle = ceilingGradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
+    // Dibujar techo
+    const ceilingGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height / 2);
+    ceilingGradient.addColorStop(0, "#222244");
+    ceilingGradient.addColorStop(1, "#111122");
+    this.ctx.fillStyle = ceilingGradient;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
 
-        // Draw floor
-        const floorGradient = this.ctx.createLinearGradient(0, this.canvas.height / 2, 0, this.canvas.height);
-        floorGradient.addColorStop(0, "#332211"); // Dark brown
-        floorGradient.addColorStop(1, "#553322");
-        this.ctx.fillStyle = floorGradient;
-        this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
+    // Dibujar piso
+    const floorGradient = this.ctx.createLinearGradient(0, this.canvas.height / 2, 0, this.canvas.height);
+    floorGradient.addColorStop(0, "#332211");
+    floorGradient.addColorStop(1, "#553322");
+    this.ctx.fillStyle = floorGradient;
+    this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
 
-        // Raycasting logic from original draw3dView
-        const numRays = this.canvas.width;
-        for (let i = 0; i < numRays; i++) {
-            const rayAngle = this.player.angle - this.player.fov / 2 + (i / numRays) * this.player.fov;
-            let distance = 0;
-            let hitWall = false;
-            let wallType = 'wall'; // 'wall', 'door'
-            // let wallX = 0, wallY = 0; // For potential texture mapping later
-            // let hitSide = ''; // For different shading on sides, if needed
+    // Lista de objetos para renderizar
+    const renderObjects = [];
 
-            // Cast the ray
-            while (!hitWall && distance < 20) { // Max distance
-                distance += 0.1; // Step increment
-                const testX = this.player.x + Math.cos(rayAngle) * distance;
-                const testY = this.player.y + Math.sin(rayAngle) * distance;
-                const mapX = Math.floor(testX);
-                const mapY = Math.floor(testY);
+    // Raycasting para paredes
+    const numRays = this.canvas.width;
+    for (let i = 0; i < numRays; i++) {
+        const rayAngle = this.player.angle - this.player.fov / 2 + (i / numRays) * this.player.fov;
+        let distance = 0;
+        let hitWall = false;
 
-                if (mapY < 0 || mapY >= this.map.mapData.length || mapX < 0 || mapX >= this.map.mapData[mapY].length) {
-                    hitWall = true; // Hit out of bounds, treat as a far wall
-                    distance = 20;
-                    wallType = 'wall'; // Or some other indicator for "void"
-                    continue;
-                }
-                
-                const cell = this.map.mapData[mapY][mapX];
+        while (!hitWall && distance < 20) {
+            distance += 0.1;
+            const testX = this.player.x + Math.cos(rayAngle) * distance;
+            const testY = this.player.y + Math.sin(rayAngle) * distance;
+            const mapX = Math.floor(testX);
+            const mapY = Math.floor(testY);
 
-                if (cell === 1) { // Wall
-                    hitWall = true;
-                    wallType = 'wall';
-                    // wallX = mapX; wallY = mapY;
-                    // Add hitSide detection if needed for advanced shading, like in original
-                } else if (cell === 2) { // Door
-                    if (!this.map.isDoorOpen(mapX, mapY)) {
-                        hitWall = true;
-                        wallType = 'door';
-                        // wallX = mapX; wallY = mapY;
-                    }
-                    // If door is open, ray continues through
-                }
+            if (mapY < 0 || mapY >= this.map.mapData.length || mapX < 0 || mapX >= this.map.mapData[mapY].length) {
+                hitWall = true;
+                distance = 20;
+                continue;
             }
 
-            if (hitWall) {
-                // Correct for fisheye distortion (optional, but good for realism)
-                // const correctedDistance = distance * Math.cos(rayAngle - this.player.angle);
-                // const wallHeight = Math.min(this.canvas.height, (this.canvas.height * 1.5) / correctedDistance);
-                
-                const wallHeight = Math.min(this.canvas.height, (this.canvas.height * 1.5) / distance);
-
-
-                const wallBrightness = Math.min(255, 255 / (distance * 0.5)); // Simple brightness based on distance
-
-                if (wallType === 'door') {
-                    this.ctx.fillStyle = `rgb(${wallBrightness}, ${wallBrightness * 0.5}, 0)`; // Brownish-orange for doors
-                } else { // 'wall' or other types
-                    this.ctx.fillStyle = `rgb(${wallBrightness * 0.7}, ${wallBrightness * 0.7}, ${wallBrightness * 0.7})`; // Grey for walls, slightly dimmer
-                }
-                
-                // Simplified shading from original, can be expanded
-                // For 'door_wall' effect from original, more complex logic for hitSide and adjacent cells is needed.
-                // This simplified version just distinguishes between 'wall' and 'door'.
-
-                this.ctx.fillRect(i, (this.canvas.height - wallHeight) / 2, 1, wallHeight); // Draw a single vertical strip for the wall
+            const cell = this.map.mapData[mapY][mapX];
+            if (cell === 1 || (cell === 2 && !this.map.isDoorOpen(mapX, mapY))) {
+                hitWall = true;
             }
         }
+
+        if (hitWall) {
+            const wallHeight = Math.min(this.canvas.height, (this.canvas.height * 1.5) / distance);
+            renderObjects.push({
+                type: "wall",
+                distance: distance,
+                screenX: i,
+                height: wallHeight,
+            });
+        }
+    }
+
+    // Agregar el NPC a la lista de renderizado
+    const dx = this.npc.x - this.player.x;
+    const dy = this.npc.y - this.player.y;
+    const npcDistance = Math.sqrt(dx * dx + dy * dy);
+    const angleToNPC = Math.atan2(dy, dx) - this.player.angle;
+
+    const halfFOV = this.player.fov / 2;
+    if (angleToNPC >= -halfFOV && angleToNPC <= halfFOV) {
+        const screenX = (this.canvas.width / 2) * (1 + Math.tan(angleToNPC) / Math.tan(halfFOV));
+        const npcHeight = Math.min(this.canvas.height, this.canvas.height / npcDistance);
+        const npcWidth = npcHeight / 2;
+
+        renderObjects.push({
+            type: "npc",
+            distance: npcDistance,
+            screenX: screenX,
+            height: npcHeight,
+            width: npcWidth,
+        });
+    }
+
+    // Ordenar objetos por distancia (descendente)
+    renderObjects.sort((a, b) => b.distance - a.distance);
+
+    // Dibujar objetos en orden
+    for (const obj of renderObjects) {
+        if (obj.type === "wall") {
+            this.ctx.fillStyle = "#888"; // Color para las paredes
+            this.ctx.fillRect(obj.screenX, (this.canvas.height - obj.height) / 2, 1, obj.height);
+        } else if (obj.type === "door") {
+            this.ctx.fillStyle = "#a52"; // Color para las puertas (marrón)
+            this.ctx.fillRect(obj.screenX, (this.canvas.height - obj.height) / 2, 1, obj.height);
+        } else if (obj.type === "npc") {
+            this.ctx.fillStyle = "#f00"; // Rojo para el NPC
+            this.ctx.fillRect(
+                obj.screenX - obj.width / 2,
+                this.canvas.height / 2 - obj.height / 2,
+                obj.width,
+                obj.height
+            );
+        }
+    }
+}
+    renderNPC() {
+        if (!this.npc) return; // Verifica que el NPC esté definido
+    
+        const dx = this.npc.x - this.player.x;
+        const dy = this.npc.y - this.player.y;
+    
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angleToNPC = Math.atan2(dy, dx) - this.player.angle;
+    
+        const halfFOV = this.player.fov / 2;
+        if (angleToNPC < -halfFOV || angleToNPC > halfFOV) {
+            return; // NPC fuera del campo de visión
+        }
+    
+        // Verificar si hay una pared bloqueando la línea de visión
+        const steps = Math.ceil(distance / 0.1); // Dividir la distancia en pasos pequeños
+        for (let i = 0; i < steps; i++) {
+            const testX = this.player.x + (dx / steps) * i;
+            const testY = this.player.y + (dy / steps) * i;
+    
+            const mapX = Math.floor(testX);
+            const mapY = Math.floor(testY);
+    
+            if (this.map.isWall(mapX, mapY)) {
+                return; // Hay una pared bloqueando la línea de visión
+            }
+        }
+    
+        // Calcular posición en pantalla
+        const screenX = (this.canvas.width / 2) * (1 + Math.tan(angleToNPC) / Math.tan(halfFOV));
+        const npcHeight = Math.min(this.canvas.height, this.canvas.height / distance);
+        const npcWidth = npcHeight / 2;
+    
+        // Dibujar NPC como un rectángulo
+        this.ctx.fillStyle = "#f00"; // Rojo para el NPC
+        this.ctx.fillRect(
+            screenX - npcWidth / 2,
+            (this.canvas.height - npcHeight) / 2,
+            npcWidth,
+            npcHeight
+        );
     }
 
     resize() {

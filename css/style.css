@@ -47,3 +47,58 @@ body {
         pointer-events: none;
         z-index: 100;
         }
+
+        #healthBarContainer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 200px;
+            height: 20px;
+            background-color: #444; /* Fondo oscuro */
+            border: 2px solid #222; /* Borde */
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        #healthBar {
+            width: 100%; /* Comienza con 100% de vida */
+            height: 100%;
+            background-color: #0f0; /* Verde para la vida */
+            transition: width 0.2s ease; /* Animación suave al cambiar */
+        }
+        #deathScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+        
+        #deathScreen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px red;
+        }
+        
+        #deathScreen button {
+            font-size: 24px;
+            padding: 10px 20px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-shadow: 0 0 5px black;
+        }
+        
+        #deathScreen button:hover {
+            background-color: darkred;
+        }

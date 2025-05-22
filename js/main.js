@@ -14,3 +14,7 @@ function init() {
 
 // Wait for the DOM to be fully loaded before initializing the game
 document.addEventListener('DOMContentLoaded', init);
+
+document.getElementById('restartButton').addEventListener('click', () => {
+    location.reload(); // Recargar la página para reiniciar el juego
+});

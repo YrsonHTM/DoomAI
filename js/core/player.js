@@ -5,15 +5,27 @@ export default class Player {
         this.x = x;
         this.y = y;
         this.angle = angle;
-        this.fov = Math.PI / 3; // Field of vision (60 degrees)
-        this.map = map; // Reference to the map object for collision detection
-
-        // Player settings from original script
+        this.fov = Math.PI / 3; // Campo de visión (60 grados)
+        this.map = map; // Referencia al mapa
+        this.health = 100; // Vida inicial del jugador
         this.settings = {
             moveSpeed: 0.05,
             rotSpeed: 0.03,
             strafeSpeed: 0.03
         };
+    }
+
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount); // Reducir vida sin bajar de 0
+        if (this.health === 0) {
+            this.die();
+        }
+    }
+
+    die() {
+        console.log("El jugador ha muerto.");
+        const deathScreen = document.getElementById('deathScreen');
+        deathScreen.style.display = 'flex'; // Mostrar la pantalla de muerte
     }
 
     // Rotate left

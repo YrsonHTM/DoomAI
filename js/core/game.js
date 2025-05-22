@@ -5,6 +5,7 @@ import Player from './player.js';
 import InputHandler from '../input/input_handler.js';
 import Renderer2D from '../graphics/renderer2d.js';
 import Renderer3D from '../graphics/renderer3d.js';
+import NPC from './npc.js';
 
 export default class Game {
     constructor() {
@@ -16,11 +17,12 @@ export default class Game {
         // Core Components
         this.map = new Map();
         this.player = new Player(1.5, 1.5, 0, this.map); // Initial player state
+        this.npc = new NPC(5, 10, this.map, this.player);
         this.inputHandler = new InputHandler();
 
         // Graphics Components
-        this.renderer2d = new Renderer2D(this.canvas2d, this.map, this.player);
-        this.renderer3d = new Renderer3D(this.canvas3d, this.map, this.player);
+        this.renderer2d = new Renderer2D(this.canvas2d, this.map, this.player, this.npc);
+        this.renderer3d = new Renderer3D(this.canvas3d, this.map, this.player, this.npc);
 
         this.isRunning = false;
         this.lastTime = 0;
@@ -43,13 +45,25 @@ export default class Game {
     }
 
     update(deltaTime) {
-        // Get current input state
         const inputState = this.inputHandler.getState();
-        
-        // Update player based on input
         this.player.update(inputState);
-
-        // Handle actions like opening doors
+        this.npc.update(deltaTime);
+    
+        // Simular daño al jugador (puedes reemplazar esto con lógica real)
+        if (Math.random() < 0.01) { // Ejemplo: 1% de probabilidad de daño por frame
+            this.player.takeDamage(5);
+        }
+    
+        // Verificar si el jugador está muerto
+        if (this.player.health === 0) {
+            this.stop(); // Detener el juego
+            return;
+        }
+    
+        // Actualizar la barra de vida del jugador
+        const healthBar = document.getElementById('healthBar');
+        healthBar.style.width = `${this.player.health}%`;
+    
         const action = this.inputHandler.getActionKey();
         if (action === 'Space') {
             const doorCoords = this.map.checkNearDoor(this.player.x, this.player.y);
@@ -57,9 +71,6 @@ export default class Game {
                 this.map.toggleDoor(doorCoords.x, doorCoords.y);
             }
         }
-
-        // Update door timers or other map-related timed events (future)
-        // e.g., this.map.updateDoors(deltaTime);
     }
 
     render() {

@@ -1,11 +1,12 @@
 // js/graphics/renderer2d.js
 
 export default class Renderer2D {
-    constructor(canvas, map, player) {
+    constructor(canvas, map, player, npc) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.map = map; // Reference to the map object
         this.player = player; // Reference to the player object
+        this.npc = npc; // Reference to the NPC object
 
         // Adjust canvas size (can be made more dynamic later)
         this.canvas.width = window.innerWidth * 0.3;
@@ -13,23 +14,22 @@ export default class Renderer2D {
     }
 
     render() {
-        const cellSize = Math.min(this.canvas.width, this.canvas.height) / 10; // Based on original map size
+        const cellSize = Math.min(this.canvas.width, this.canvas.height) / 30; // Based on original map size
         
         // Clear canvas
         this.ctx.fillStyle = "#000"; // Background color from original
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
+    
         // Draw map cells
         for (let y = 0; y < this.map.mapData.length; y++) {
             for (let x = 0; x < this.map.mapData[y].length; x++) {
                 const cellType = this.map.mapData[y][x];
                 let cellColor = "#333"; // Default for empty space
-
+    
                 if (cellType === 1) { // Wall
                     cellColor = "#f00";
                 } else if (cellType === 2) { // Door
-                    // Potentially show if door is open or closed with different color
-                    cellColor = this.map.isDoorOpen(x,y) ? "#0A0" : "#a52"; // Green if open, brown if closed
+                    cellColor = this.map.isDoorOpen(x, y) ? "#0A0" : "#a52"; // Green if open, brown if closed
                 }
                 
                 this.ctx.fillStyle = cellColor;
@@ -38,7 +38,7 @@ export default class Renderer2D {
                 this.ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
             }
         }
-
+    
         // Draw player
         this.ctx.fillStyle = "#0f0"; // Player color
         this.ctx.beginPath();
@@ -50,7 +50,7 @@ export default class Renderer2D {
             Math.PI * 2
         );
         this.ctx.fill();
-
+    
         // Draw player direction line
         this.ctx.strokeStyle = "#0f0";
         this.ctx.beginPath();
@@ -60,6 +60,18 @@ export default class Renderer2D {
             (this.player.y + Math.sin(this.player.angle)) * cellSize
         );
         this.ctx.stroke();
+    
+        // Draw NPC
+        this.ctx.fillStyle = '#f00'; // Red for the NPC
+        this.ctx.beginPath();
+        this.ctx.arc(
+            this.npc.x * cellSize,
+            this.npc.y * cellSize,
+            cellSize / 4, // NPC size
+            0,
+            Math.PI * 2
+        );
+        this.ctx.fill();
     }
 
     // Method to resize canvas if window size changes
