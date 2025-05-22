@@ -61,24 +61,19 @@ export default class Map {
         return this.doors[key] && this.doors[key].isOpen;
     }
 
-    canMove(newX, newY) {
-        const mapX = Math.floor(newX);
-        const mapY = Math.floor(newY);
-
-        if (mapY < 0 || mapY >= this.mapData.length || mapX < 0 || mapX >= this.mapData[mapY].length) {
-            return false; // Cannot move out of bounds
-        }
-
-        const cellType = this.mapData[mapY][mapX];
-        if (cellType === 1) { // Wall
+    canMove(x, y) {
+        const mapX = Math.floor(x);
+        const mapY = Math.floor(y);
+    
+        // Verificar si las coordenadas están dentro del mapa
+        if (mapX < 0 || mapY < 0 || mapX >= this.mapData[0].length || mapY >= this.mapData.length) {
             return false;
         }
-        if (cellType === 2 && !this.isDoorOpen(mapX, mapY)) { // Closed door
-            return false;
-        }
-        return true; // Can move
+    
+        // Verificar si la celda es un muro o una puerta cerrada
+        const cell = this.mapData[mapY][mapX];
+        return cell === 0 || (cell === 2 && this.isDoorOpen(mapX, mapY)); // 0 = espacio libre, 2 = puerta abierta
     }
-
     toggleDoor(x, y) {
         const key = `${y},${x}`; // Note: original script used y,x for key
         if (this.doors[key]) {
@@ -86,6 +81,71 @@ export default class Map {
             this.doors[key].timer = Date.now(); // For potential timed closing later
             console.log(`Door at ${x},${y} is now ${this.doors[key].isOpen ? 'open' : 'closed'}`);
         }
+    }
+
+    findPath(startX, startY, targetX, targetY) {
+        const openSet = [];
+        const cameFrom = {};
+        const gScore = {};
+        const fScore = {};
+    
+        const key = (x, y) => `${x},${y}`;
+        const neighbors = [
+            { x: 0, y: -1 }, // Arriba
+            { x: 1, y: 0 },  // Derecha
+            { x: 0, y: 1 },  // Abajo
+            { x: -1, y: 0 }  // Izquierda
+        ];
+    
+        const heuristic = (x1, y1, x2, y2) => Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    
+        const startKey = key(startX, startY);
+        const targetKey = key(targetX, targetY);
+    
+        openSet.push({ x: startX, y: startY });
+        gScore[startKey] = 0;
+        fScore[startKey] = heuristic(startX, startY, targetX, targetY);
+    
+        while (openSet.length > 0) {
+            // Encuentra el nodo con el menor fScore
+            openSet.sort((a, b) => fScore[key(a.x, a.y)] - fScore[key(b.x, b.y)]);
+            const current = openSet.shift();
+            const currentKey = key(current.x, current.y);
+    
+            if (current.x === targetX && current.y === targetY) {
+                // Reconstruir el camino
+                const path = [];
+                let tempKey = currentKey;
+                while (tempKey in cameFrom) {
+                    const [x, y] = tempKey.split(',').map(Number);
+                    path.unshift({ x, y });
+                    tempKey = cameFrom[tempKey];
+                }
+                return path;
+            }
+    
+            for (const neighbor of neighbors) {
+                const neighborX = current.x + neighbor.x;
+                const neighborY = current.y + neighbor.y;
+                const neighborKey = key(neighborX, neighborY);
+    
+                if (!this.canMove(neighborX, neighborY)) continue; // Ignorar celdas no transitables
+    
+                const tentativeGScore = gScore[currentKey] + 1;
+    
+                if (!(neighborKey in gScore) || tentativeGScore < gScore[neighborKey]) {
+                    cameFrom[neighborKey] = currentKey;
+                    gScore[neighborKey] = tentativeGScore;
+                    fScore[neighborKey] = tentativeGScore + heuristic(neighborX, neighborY, targetX, targetY);
+    
+                    if (!openSet.some(n => n.x === neighborX && n.y === neighborY)) {
+                        openSet.push({ x: neighborX, y: neighborY });
+                    }
+                }
+            }
+        }
+    
+        return null; // No se encontró un camino
     }
 
     // This function needs player's current position to check proximity.

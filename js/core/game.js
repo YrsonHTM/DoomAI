@@ -17,7 +17,7 @@ export default class Game {
         // Core Components
         this.map = new Map();
         this.player = new Player(1.5, 1.5, 0, this.map); // Initial player state
-        this.npc = new NPC(5, 10, this.map, this.player);
+        this.npc = new NPC(5, 10, this.map, this.player, 1); // Asegúrate de que las coordenadas sean válidas
         this.inputHandler = new InputHandler();
 
         // Graphics Components
@@ -48,11 +48,6 @@ export default class Game {
         const inputState = this.inputHandler.getState();
         this.player.update(inputState);
         this.npc.update(deltaTime);
-    
-        // Simular daño al jugador (puedes reemplazar esto con lógica real)
-        if (Math.random() < 0.01) { // Ejemplo: 1% de probabilidad de daño por frame
-            this.player.takeDamage(5);
-        }
     
         // Verificar si el jugador está muerto
         if (this.player.health === 0) {

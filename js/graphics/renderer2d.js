@@ -14,44 +14,44 @@ export default class Renderer2D {
     }
 
     render() {
-        const cellSize = Math.min(this.canvas.width, this.canvas.height) / 30; // Based on original map size
-        
-        // Clear canvas
-        this.ctx.fillStyle = "#000"; // Background color from original
+        const cellSize = Math.min(this.canvas.width, this.canvas.height) / 30; // Tamaño de las celdas del mapa
+    
+        // Limpiar el canvas
+        this.ctx.fillStyle = "#000"; // Fondo negro
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-        // Draw map cells
+        // Dibujar el mapa
         for (let y = 0; y < this.map.mapData.length; y++) {
             for (let x = 0; x < this.map.mapData[y].length; x++) {
                 const cellType = this.map.mapData[y][x];
-                let cellColor = "#333"; // Default for empty space
+                let cellColor = "#333"; // Espacio vacío
     
-                if (cellType === 1) { // Wall
-                    cellColor = "#f00";
-                } else if (cellType === 2) { // Door
-                    cellColor = this.map.isDoorOpen(x, y) ? "#0A0" : "#a52"; // Green if open, brown if closed
+                if (cellType === 1) { // Pared
+                    cellColor = "#f00"; // Rojo para paredes
+                } else if (cellType === 2) { // Puerta
+                    cellColor = this.map.isDoorOpen(x, y) ? "#0A0" : "#ff0"; // Verde si está abierta, amarillo si está cerrada
                 }
-                
+    
                 this.ctx.fillStyle = cellColor;
                 this.ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-                this.ctx.strokeStyle = "#000"; // Cell border
+                this.ctx.strokeStyle = "#000"; // Bordes de las celdas
                 this.ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
             }
         }
     
-        // Draw player
-        this.ctx.fillStyle = "#0f0"; // Player color
+        // Dibujar al jugador
+        this.ctx.fillStyle = "#0f0"; // Verde para el jugador
         this.ctx.beginPath();
         this.ctx.arc(
             this.player.x * cellSize,
             this.player.y * cellSize,
-            cellSize / 4, // Player size
+            cellSize / 4, // Tamaño del jugador
             0,
             Math.PI * 2
         );
         this.ctx.fill();
     
-        // Draw player direction line
+        // Dibujar la dirección del jugador
         this.ctx.strokeStyle = "#0f0";
         this.ctx.beginPath();
         this.ctx.moveTo(this.player.x * cellSize, this.player.y * cellSize);
@@ -61,17 +61,28 @@ export default class Renderer2D {
         );
         this.ctx.stroke();
     
-        // Draw NPC
-        this.ctx.fillStyle = '#f00'; // Red for the NPC
+        // Dibujar al NPC
+        this.ctx.fillStyle = "#f00"; // Rojo para el NPC
         this.ctx.beginPath();
         this.ctx.arc(
             this.npc.x * cellSize,
             this.npc.y * cellSize,
-            cellSize / 4, // NPC size
+            cellSize / 4, // Tamaño del NPC
             0,
             Math.PI * 2
         );
         this.ctx.fill();
+    
+        // Dibujar la dirección del NPC
+        const npcAngle = Math.atan2(this.player.y - this.npc.y, this.player.x - this.npc.x); // Dirección hacia el jugador
+        this.ctx.strokeStyle = "#f00"; // Rojo para la dirección del NPC
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.npc.x * cellSize, this.npc.y * cellSize);
+        this.ctx.lineTo(
+            (this.npc.x + Math.cos(npcAngle)) * cellSize,
+            (this.npc.y + Math.sin(npcAngle)) * cellSize
+        );
+        this.ctx.stroke();
     }
 
     // Method to resize canvas if window size changes

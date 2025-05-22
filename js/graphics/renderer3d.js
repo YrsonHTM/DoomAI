@@ -40,30 +40,37 @@ render() {
         const rayAngle = this.player.angle - this.player.fov / 2 + (i / numRays) * this.player.fov;
         let distance = 0;
         let hitWall = false;
-
+        let wallType = "wall"; // Por defecto, asumimos que es una pared
+    
         while (!hitWall && distance < 20) {
             distance += 0.1;
             const testX = this.player.x + Math.cos(rayAngle) * distance;
             const testY = this.player.y + Math.sin(rayAngle) * distance;
             const mapX = Math.floor(testX);
             const mapY = Math.floor(testY);
-
+    
             if (mapY < 0 || mapY >= this.map.mapData.length || mapX < 0 || mapX >= this.map.mapData[mapY].length) {
                 hitWall = true;
                 distance = 20;
                 continue;
             }
-
+    
             const cell = this.map.mapData[mapY][mapX];
-            if (cell === 1 || (cell === 2 && !this.map.isDoorOpen(mapX, mapY))) {
+            if (cell === 1) {
                 hitWall = true;
+                wallType = "wall"; // Es una pared
+            } else if (cell === 2) {
+                if (!this.map.isDoorOpen(mapX, mapY)) {
+                    hitWall = true;
+                    wallType = "door"; // Es una puerta cerrada
+                }
             }
         }
-
+    
         if (hitWall) {
             const wallHeight = Math.min(this.canvas.height, (this.canvas.height * 1.5) / distance);
             renderObjects.push({
-                type: "wall",
+                type: wallType, // Puede ser "wall" o "door"
                 distance: distance,
                 screenX: i,
                 height: wallHeight,
@@ -71,18 +78,17 @@ render() {
         }
     }
 
-    // Agregar el NPC a la lista de renderizado
     const dx = this.npc.x - this.player.x;
     const dy = this.npc.y - this.player.y;
     const npcDistance = Math.sqrt(dx * dx + dy * dy);
     const angleToNPC = Math.atan2(dy, dx) - this.player.angle;
-
+    
     const halfFOV = this.player.fov / 2;
     if (angleToNPC >= -halfFOV && angleToNPC <= halfFOV) {
         const screenX = (this.canvas.width / 2) * (1 + Math.tan(angleToNPC) / Math.tan(halfFOV));
         const npcHeight = Math.min(this.canvas.height, this.canvas.height / npcDistance);
         const npcWidth = npcHeight / 2;
-
+    
         renderObjects.push({
             type: "npc",
             distance: npcDistance,
@@ -98,10 +104,10 @@ render() {
     // Dibujar objetos en orden
     for (const obj of renderObjects) {
         if (obj.type === "wall") {
-            this.ctx.fillStyle = "#888"; // Color para las paredes
+            this.ctx.fillStyle = "#888"; // Gris para las paredes
             this.ctx.fillRect(obj.screenX, (this.canvas.height - obj.height) / 2, 1, obj.height);
         } else if (obj.type === "door") {
-            this.ctx.fillStyle = "#a52"; // Color para las puertas (marrón)
+            this.ctx.fillStyle = "#FFD700"; // Amarillo brillante para las puertas
             this.ctx.fillRect(obj.screenX, (this.canvas.height - obj.height) / 2, 1, obj.height);
         } else if (obj.type === "npc") {
             this.ctx.fillStyle = "#f00"; // Rojo para el NPC
