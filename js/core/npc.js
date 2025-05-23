@@ -10,10 +10,15 @@ export default class NPC {
         this.damage = 10;
         this.health = 100; // Vida inicial del NPC
         this.state = 'patrolling'; // Estados: 'patrolling', 'chasing', 'attacking'
+        // Propiedades para el parpadeo
+        this.isBlinking = false;
+        this.blinkTimer = 0;
+        this.blinkDuration = 0.5; // Duración del parpadeo en segundos
     }
 
     takeDamage(amount) {
         this.health = Math.max(0, this.health - amount);
+        console.log(`NPC recibió ${amount} de daño. Salud restante: ${this.health}`);
         if (this.health === 0) {
             this.die();
         }
@@ -21,18 +26,28 @@ export default class NPC {
 
     die() {
         console.log("El NPC ha muerto.");
-        const deathScreen = document.getElementById('deathScreen');
-        deathScreen.style.display = 'flex'; // Mostrar la pantalla de muerte
+    }
+
+    startBlinking() {
+        this.isBlinking = true;
+        this.blinkTimer = this.blinkDuration;
     }
 
     update(deltaTime) {
-        if (this.health <= 0) return;
         if (this.health <= 0) return; // No hacer nada si está muerto
-    
+
+        // Actualizar el temporizador de parpadeo
+        if (this.isBlinking) {
+            this.blinkTimer -= deltaTime;
+            if (this.blinkTimer <= 0) {
+                this.isBlinking = false; // Detener el parpadeo
+            }
+        }
+
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
-    
+
         if (distanceToPlayer <= this.attackRadius) {
             this.state = 'attacking';
         } else if (distanceToPlayer <= this.detectionRadius) {
@@ -40,7 +55,7 @@ export default class NPC {
         } else {
             this.state = 'patrolling';
         }
-    
+
         if (this.state === 'patrolling') {
             this.patrol(deltaTime);
         } else if (this.state === 'chasing') {

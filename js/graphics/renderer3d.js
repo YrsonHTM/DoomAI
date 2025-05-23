@@ -114,8 +114,17 @@ render() {
         } else if (obj.type === "door") {
             this.ctx.fillStyle = "#FFD700"; // Amarillo brillante para las puertas
             this.ctx.fillRect(obj.screenX, (this.canvas.height - obj.height) / 2, 1, obj.height);
-        } else if (obj.type === "npc") {
-            this.ctx.fillStyle = "#f00"; // Rojo para el NPC
+        } else     if (obj.type === "npc") {
+            // Verificar si el NPC está parpadeando
+            if (this.npc.isBlinking && Math.floor(this.npc.blinkTimer * 10) % 2 === 0) {
+                continue; // Saltar el renderizado del NPC durante el parpadeo
+            }
+    
+            if (this.npc.health > 0) {
+                this.ctx.fillStyle = "#f00"; // Rojo para el NPC vivo
+            } else {
+                this.ctx.fillStyle = "#ff6666"; // Rojo claro para el NPC muerto
+            }
             this.ctx.fillRect(
                 obj.screenX - obj.width / 2,
                 this.canvas.height / 2 - obj.height / 2,
@@ -123,6 +132,12 @@ render() {
                 obj.height
             );
         }
+    }
+
+    // Dibujar animación de disparo si está activa
+    if (this.shotFlashTime > 0) {
+        this.renderShotFlash();
+        this.shotFlashTime -= 1; // Reducir el tiempo del destello
     }
 }
     renderNPC() {
@@ -166,6 +181,11 @@ render() {
             npcWidth,
             npcHeight
         );
+    }
+
+    renderShotFlash() {
+        this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)"; // Amarillo semitransparente
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     resize() {

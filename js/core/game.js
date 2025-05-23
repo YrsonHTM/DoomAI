@@ -24,6 +24,9 @@ export default class Game {
         this.renderer2d = new Renderer2D(this.canvas2d, this.map, this.player, this.npc);
         this.renderer3d = new Renderer3D(this.canvas3d, this.map, this.player, this.npc);
 
+        // Asignar renderer3d al jugador después de inicializarlo
+        this.player.renderer3d = this.renderer3d;
+
         this.isRunning = false;
         this.lastTime = 0;
 
@@ -44,16 +47,16 @@ export default class Game {
         console.log("Game stopped.");
     }
 
-    update(deltaTime) {
+    update(deltaTime, currentTime) {
         const inputState = this.inputHandler.getState();
         this.player.update(inputState);
-        this.npc.update(deltaTime);
     
-        // Verificar si el jugador está muerto
-        if (this.player.health === 0) {
-            this.stop(); // Detener el juego
-            return;
+        // Detectar disparo con la tecla Espacio
+        if (inputState[' ']) {
+            this.player.shoot(this.npc, currentTime / 1000);
         }
+    
+        this.npc.update(deltaTime);
     
         // Actualizar la barra de vida del jugador
         const healthBar = document.getElementById('healthBar');
@@ -86,13 +89,13 @@ export default class Game {
 
     gameLoop(currentTime) {
         if (!this.isRunning) return;
-
-        const deltaTime = (currentTime - this.lastTime) / 1000; // Delta time in seconds
+    
+        const deltaTime = (currentTime - this.lastTime) / 1000; // Delta time en segundos
         this.lastTime = currentTime;
-
-        this.update(deltaTime);
+    
+        this.update(deltaTime, currentTime / 1000); // Pasar el tiempo actual en segundos
         this.render();
-
+    
         requestAnimationFrame(this.gameLoop);
     }
 

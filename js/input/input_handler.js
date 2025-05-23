@@ -11,19 +11,19 @@ export default class InputHandler {
             a: false,
             s: false,
             d: false,
-            ' ': false // For actions like opening doors
+            ' ': false // Para acciones como disparar
         };
-        this.actionKey = null; // To store a key that was pressed once, like space
+        this.actionKey = null; // Para almacenar una tecla presionada una vez, como Espacio
         this._setupListeners();
     }
 
     _setupListeners() {
         document.addEventListener('keydown', (e) => {
             if (this.keys.hasOwnProperty(e.key)) {
-                e.preventDefault(); // Prevent default browser action for game keys
+                e.preventDefault(); // Prevenir la acción predeterminada del navegador
                 this.keys[e.key] = true;
             }
-            if (e.key === ' ') { // Specifically track space for single press actions
+            if (e.key === ' ') { // Específicamente rastrear Espacio para acciones únicas
                 this.actionKey = 'Space';
             }
         });
@@ -32,6 +32,9 @@ export default class InputHandler {
             if (this.keys.hasOwnProperty(e.key)) {
                 e.preventDefault();
                 this.keys[e.key] = false;
+            }
+            if (e.key === ' ') {
+                this.canShoot = true; // Permitir disparar nuevamente al soltar Espacio
             }
         });
     }

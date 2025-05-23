@@ -1,7 +1,9 @@
 // js/core/player.js
+import Weapon from './weapon.js';
 
 export default class Player {
-    constructor(x, y, angle, map) {
+    constructor(x, y, angle, map, renderer3d = null) {
+        this.renderer3d = renderer3d; // Referencia al renderer3d
         this.x = x;
         this.y = y;
         this.angle = angle;
@@ -13,6 +15,50 @@ export default class Player {
             rotSpeed: 0.03,
             strafeSpeed: 0.03
         };
+        this.weapon = new Weapon("Pistola", 20, 0.001);
+    }
+
+    shoot(npc, currentTime) {
+        const damage = this.weapon.shoot(currentTime); // Intentar disparar con el arma
+        if (damage > 0) {
+            const dx = npc.x - this.x;
+            const dy = npc.y - this.y;
+            const distanceToNPC = Math.sqrt(dx * dx + dy * dy);
+    
+            // Calcular el ángulo hacia el NPC
+            let angleToNPC = Math.atan2(dy, dx) - this.angle;
+            angleToNPC = ((angleToNPC + Math.PI) % (2 * Math.PI)) - Math.PI; // Normalizar entre -PI y PI
+    
+            const halfFOV = this.fov / 2;
+    
+            // Verificar si el NPC está dentro del campo de visión y no bloqueado por una pared
+            if (angleToNPC >= -halfFOV && angleToNPC <= halfFOV) {
+                const steps = Math.ceil(distanceToNPC / 0.1); // Dividir la distancia en pasos pequeños
+                for (let i = 0; i < steps; i++) {
+                    const testX = this.x + (dx / steps) * i;
+                    const testY = this.y + (dy / steps) * i;
+    
+                    const mapX = Math.floor(testX);
+                    const mapY = Math.floor(testY);
+    
+                    if (this.map.isWall(mapX, mapY)) {
+                        console.log("El disparo fue bloqueado por una pared.");
+                        return; // Hay una pared bloqueando la línea de visión
+                    }
+                }
+    
+                // Si no hay obstrucciones, hacer daño al NPC
+                npc.takeDamage(damage);
+                console.log("¡Disparo exitoso! NPC recibió daño.");
+    
+                // Activar el destello de disparo
+                if (this.renderer3d) {
+                    this.renderer3d.renderShotFlash();
+                } else {
+                    console.error("renderer3d no está definido.");
+                }
+            }
+        }
     }
 
     takeDamage(amount) {
@@ -86,6 +132,11 @@ export default class Player {
 
         if (inputState.ArrowUp || inputState.w) this.moveForward();
         if (inputState.ArrowDown || inputState.s) this.moveBackward();
+
+        if (inputState.space && inputHandler.canShoot) {
+            this.player.shoot(this.npc);
+            this.renderer3d.renderShot();
+        }
 
         if (inputState.a) this.strafeLeft();
         if (inputState.d) this.strafeRight();
