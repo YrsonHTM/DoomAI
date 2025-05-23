@@ -10,12 +10,19 @@ export default class Renderer3D {
         // Ajustar tamaño del canvas
         this.canvas.width = window.innerWidth * 0.7;
         this.canvas.height = window.innerHeight;
+        this.isShootingActive = false;
     }
 
 render() {
     // Limpiar el canvas
     this.ctx.fillStyle = "#111";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    // Dibujar animación de disparo si está activa
+    if (this.isShootingActive) {
+        this.renderShotFlash();
+        this.isShootingActive = false;
+    }
 
     // Dibujar techo
     const ceilingGradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height / 2);
@@ -134,11 +141,6 @@ render() {
         }
     }
 
-    // Dibujar animación de disparo si está activa
-    if (this.shotFlashTime > 0) {
-        this.renderShotFlash();
-        this.shotFlashTime -= 1; // Reducir el tiempo del destello
-    }
 }
     renderNPC() {
         if (!this.npc) return; // Verifica que el NPC esté definido
@@ -184,7 +186,7 @@ render() {
     }
 
     renderShotFlash() {
-        this.ctx.fillStyle = "rgba(255, 255, 0, 0.5)"; // Amarillo semitransparente
+        this.ctx.fillStyle = "rgba(255, 255, 255, 0.8)"; // Amarillo semitransparente
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 

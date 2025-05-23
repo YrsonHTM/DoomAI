@@ -49,12 +49,8 @@ export default class Game {
 
     update(deltaTime, currentTime) {
         const inputState = this.inputHandler.getState();
-        this.player.update(inputState);
-    
-        // Detectar disparo con la tecla Espacio
-        if (inputState[' ']) {
-            this.player.shoot(this.npc, currentTime / 1000);
-        }
+        // Pass npc and currentTime to player's update method
+        this.player.update(inputState, this.npc, currentTime); 
     
         this.npc.update(deltaTime);
     

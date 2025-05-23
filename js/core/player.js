@@ -53,7 +53,7 @@ export default class Player {
     
                 // Activar el destello de disparo
                 if (this.renderer3d) {
-                    this.renderer3d.renderShotFlash();
+                    this.renderer3d.isShootingActive = true;
                 } else {
                     console.error("renderer3d no está definido.");
                 }
@@ -126,16 +126,15 @@ export default class Player {
 
     // Update player based on input state
     // Input state would be an object like { ArrowUp: true, ArrowLeft: false, ... }
-    update(inputState) {
+    update(inputState, npc, currentTime) {
         if (inputState.ArrowLeft) this.rotateLeft();
         if (inputState.ArrowRight) this.rotateRight();
 
         if (inputState.ArrowUp || inputState.w) this.moveForward();
         if (inputState.ArrowDown || inputState.s) this.moveBackward();
 
-        if (inputState.space && inputHandler.canShoot) {
-            this.player.shoot(this.npc);
-            this.renderer3d.renderShot();
+        if (inputState[' ']) {
+            this.shoot(npc, currentTime);
         }
 
         if (inputState.a) this.strafeLeft();
